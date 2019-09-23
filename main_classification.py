@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 import matplotlib.pyplot as plt
 import MNISTtools
 import NeuralNetwork
@@ -35,8 +36,14 @@ if __name__ == "__main__":
     # --------------------------------
     # todo (Create NN Model)
     # --------------------------------
-    nn = NeuralNetwork.NN(784, 204, 202, 10, "softmax")
-
+    if len(sys.argv) != 2:
+        raise ValueError("Didn't Enter argument for NN selection")
+    if sys.argv[1] == 'deep':
+        nn = NeuralNetwork.Deep_NN(784, 204, 202, 10, "softmax")
+    elif sys.argv[1] == 'wide':
+        nn = NeuralNetwork.Wide_NN(784, 256, 10, "softmax")
+    else:
+        raise ValueError("Enter 'deep' for deep neural network, 'wide' for wide neural network")
 
     # Training the Model
     loss_rec = []
