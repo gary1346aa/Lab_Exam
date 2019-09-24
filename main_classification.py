@@ -19,23 +19,13 @@ if __name__ == "__main__":
     x_train, y_train = MNISTtools.loadMNIST(dataset="training", path="MNIST_data")
     x_test, y_test = MNISTtools.loadMNIST(dataset="testing", path="MNIST_data")
 
-    # Show Data and Label
-    #print(x_train[0])
-    #print(y_train[0])
-    #plt.imshow(x_train[0].reshape((28,28)), cmap='gray')
-    #plt.show()
-
-    # --------------------------------
-    # todo (Data Processing)
-    # --------------------------------
+    # Data Processing
     x_train = x_train.astype(np.float32) / 255.
     x_test = x_test.astype(np.float32) / 255.
     y_train = OneHot(y_train)
     y_test = OneHot(y_test)
 
-    # --------------------------------
-    # todo (Create NN Model)
-    # --------------------------------
+    # Create NN Model
     if len(sys.argv) != 2:
         raise ValueError("Didn't Enter argument for NN selection")
     if sys.argv[1] == 'deep':
@@ -44,39 +34,33 @@ if __name__ == "__main__":
         nn = NeuralNetwork.Wide_NN(784, 256, 10, "softmax")
     else:
         raise ValueError("Enter 'deep' for deep neural network, 'wide' for wide neural network")
-
+    
     # Training the Model
     loss_rec = []
     batch_size = 64
     for i in range(10001):
-        # --------------------------------
-        # todo (Sample Data Batch)
-        # --------------------------------
+        # Sample Data Batch)
         batch_id = np.random.choice(x_train.shape[0], batch_size)
         x_batch = x_train[batch_id]
         y_batch = y_train[batch_id]
-        # --------------------------------
-        # todo (Forward & Backward & Update)
-        # --------------------------------
+
+        # Forward & Backward & Update)
         nn.feed({"x": x_batch, "y": y_batch})
         nn.forward()
         nn.backward()
         nn.update(1e-2)
-        # --------------------------------
-        # todo (Loss)
-        # --------------------------------
+
+        # Loss
         loss = nn.computeLoss()
         loss_rec.append(loss)
-        # --------------------------------
-        # todo (Evaluation)
-        # --------------------------------
-        
+
+        # todo (Evaluation
         batch_id = np.random.choice(x_test.shape[0], batch_size)
         x_test_batch = x_test[batch_id]
         y_test_batch = y_test[batch_id]
         nn.feed({"x": x_test_batch})
         y_pred_batch = nn.forward()
-        #print(x_test_batch.shape)
+
         acc = Accuracy(y_pred_batch, y_test_batch)
     
         if i%100 == 0:

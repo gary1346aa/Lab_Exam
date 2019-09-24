@@ -151,13 +151,14 @@ class Wide_NN():
 
 """ Denoising AutoEncoder NN with Dropout"""
 class dAE_NN(): 
-    
-    def __init__(self, input_size, hidden_size, output_size, activation):
+
+    def __init__(self, input_size, hidden_size, output_size, activation, rate=0.5):
         self.W1 = np.random.randn(input_size, hidden_size) / np.sqrt(input_size)
         self.b1 = np.zeros([1, hidden_size])
         self.W2 = np.random.randn(hidden_size, output_size) / np.sqrt(input_size)
         self.b2 = np.zeros([1, output_size])
         self.activation = activation
+        self.rate = rate
         self.placeholder = {"x" : None, "y" : None}
     
     # Feed Placeholder
@@ -166,35 +167,36 @@ class dAE_NN():
             self.placeholder[key] = feed_dict[key].copy()
     
     # Forward Propagation
-    def forward(self):
+    def forward(self, train=True):
         n = self.placeholder["x"].shape[0]
         self.a1 = self.placeholder["x"].dot(self.W1) + np.ones((n, 1)).dot(self.b1)
         self.h1 = RELU(self.a1)
-        self.d2 = dropout(rate=0.5, size = self.h1.shape[0])
-        self.a2 = self.d2.dot(self.h1.dot(self.W2) + np.ones((n, 1)).dot(self.b2))
-    
+        if train and self.rate != 0:
+            self.d1 = dropout(self.rate, self.h1.shape)
+            self.h1 *= self.d1
+        self.a2 = self.h1.dot(self.W2) + np.ones((n, 1)).dot(self.b2)
         if self.activation == "linear":
             self.y = self.a2.copy()
         elif self.activation == "softmax":
             self.y = softmax(self.a2)
         elif self.activation == "sigmoid":
             self.y = sigmoid(self.a2)
-
+            
         return self.y
     
     # Backward Propagation
     def backward(self):
         n = self.placeholder["y"].shape[0]
-        self.grad_a2 = (self.y - self.placeholder["y"]) / n
-        self.grad_d2 = self.d2.dot(self.grad_a2)
-        self.grad_b2 = np.ones((n, 1)).T.dot(self.grad_d2)
+        self.grad_a2 = ((self.y - self.placeholder["y"]) / n)
+        self.grad_b2 = np.ones((n, 1)).T.dot(self.grad_a2)
         self.grad_W2 = self.h1.T.dot(self.grad_a2)
         self.grad_h1 = self.grad_a2.dot(self.W2.T)
+        self.grad_h1 *= self.d1
         self.grad_a1 = self.grad_h1.copy()
         self.grad_a1[self.a1 < 0] = 0
         self.grad_b1 = np.ones((n, 1)).T.dot(self.grad_a1)
         self.grad_W1 = self.placeholder["x"].T.dot(self.grad_a1)
-    
+
     # Update Weights
     def update(self, learning_rate=1e-3):
         self.W1 = self.W1 - learning_rate * self.grad_W1
@@ -218,3 +220,4 @@ class dAE_NN():
             (1-self.placeholder["y"]) * np.log(1-self.y + 1e-6)
             loss = np.mean(loss)
         return loss
+        
